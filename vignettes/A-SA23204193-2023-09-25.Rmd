@@ -1,0 +1,143 @@
+---
+title: "A-SA23204193-2023-09-25"
+author: "SA23204193"
+date: "2023-09-25"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A-SA23204193-2023-09-25}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+## Question
+
+• Proof that what value $ρ =\frac{l}{d}$ should take to minimize the asymptotic variance of $\hat\pi$? (m ∼ B(n, p),
+using δ method)
+
+• Take three different values of ρ (0 ≤ ρ ≤ 1, including $ρ_{min}$) and use Monte Carlo simulation to verify
+your answer. ($n = 10^6$, Number of repeated simulations K = 100)
+
+
+
+### Ex 5.6
+
+In Example 5.7 the control variate approach was illustrated for Monte Carlo integration of $$\theta=\int_0^1e^xdx.$$
+
+Now consider the antithetic variate approach. Compute $Cov(e^U, e^{1−U})$ and
+$Var(e^U + e^{1−U})$, where U ∼ Uniform(0,1). What is the percent reduction in
+variance of θˆ that can be achieved using antithetic variates (compared with
+simple MC)?
+
+### Ex 5.7
+
+Refer to Exercise 5.6. Use a Monte Carlo simulation to estimate θ by the
+antithetic variate approach and by the simple Monte Carlo method. Compute
+an empirical estimate of the percent reduction in variance using the antithetic
+variate. Compare the result with the theoretical value from Exercise 5.6.
+
+## Answer
+
+### 1.
+
+一次投针相交概率: $p=\frac{2l}{d\pi}$
+
+设投针$n$次中有$m$次相交，记$X_n=\frac{m}{n}$, 则由$m\thicksim B(n,p)$,
+
+有$X_n$的渐近分布服从$N(p,\frac{p(1-p)}{n})$, $\sqrt n (X_n-p) \thicksim N(0, p(1-p))$;
+
+$\hat \pi = \frac{2l}{dX_n}$, 令$g(x)=\frac{2l}{dx}$, 则$g^\prime(x)=-\frac{2l}{dx^2}$
+
+由$\delta$ method, $\sqrt n (\hat \pi - \frac{2l}{dp}) = \sqrt n (\frac{2l}{dX_n} - \frac{2l}{dp}) = \sqrt n (g(X_n)-g(p)) \thicksim N(0, (g\prime(p))^2 p(1-p))$
+
+其中$(g\prime(p))^2 p(1-p) = \frac{4l^2}{d^2 p^4}p(1-p) = \pi^2(\frac{\pi d}{2l}-1)$
+
+由于$0 \le l \le d$, 可知$l = d$, 即$\rho = 1$时，$\hat \pi$的渐近方差最小. 
+
+$\rho$分别取值为0.6, 0.8, 1, 其中$\rho_{min} = 1$.
+
+```{r}
+K = 100
+pihat <- rep(0, K)
+for (i in 1:K) {
+  set.seed(i)
+l <- 0.5
+d <- 1
+n <- 1e6
+X <- runif(n,0,d/2)
+Y <- runif(n,0,pi/2)
+pihat[i] <- 2*l/d/mean(l/2*sin(Y)>X)
+}
+var(pihat)
+
+```
+
+```{r}
+pihat <- rep(0, K)
+for (i in 1:K) {
+  set.seed(i+100)
+l <- 0.8
+d <- 1
+n <- 1e6
+X <- runif(n,0,d/2)
+Y <- runif(n,0,pi/2)
+pihat[i] <- 2*l/d/mean(l/2*sin(Y)>X)
+}
+var(pihat)
+```
+
+```{r}
+pihat <- rep(0, K)
+for (i in 1:K) {
+  set.seed(i+200)
+l <- 1
+d <- 1
+n <- 1e6
+X <- runif(n,0,d/2)
+Y <- runif(n,0,pi/2)
+pihat[i] <- 2*l/d/mean(l/2*sin(Y)>X)
+}
+var(pihat)
+```
+可见$\rho_{min} = 1$时估计有最小的方差. 
+
+### Ex 5.6
+
+$Cov(e^U, e^{1-U}) = \mathrm Ee - \mathrm Ee^U \mathrm Ee^{1-U} = -e^2+3e-1$
+
+$\mathrm {Var}(e^U+e^{1-U}) = \mathrm{Var}e^U + \mathrm{Var}e^{1-U} + 2\mathrm{Cov}(e^U, e^{1-U}) = -3e^2+10e-5$
+
+$\mathrm{Var}\hat\theta = \mathrm{Var}(\frac{1}{m}\sum_{j=1}^{m/2}(e^U+e^{1-U})) = \frac{1}{m^2}\frac{m}{2}\mathrm{Var}(e^U+e^{1-U}) = \frac{1}{2m}(-3e^2+10e-5) = \frac{0.0078}{m}$
+
+```{r}
+(-3*exp(2)+10*exp(1)-5)/2
+```
+
+while the variance of the simple MC estimator is 0.2420/m, 
+```{r}
+(0.2420-0.0078)/0.2420
+```
+using antithetic variates, variance decreased by 96.8%.
+
+### Ex 5.7
+
+```{r}
+m <- 100000
+K <- 100
+est1 <- rep(0,K)
+est2 <- rep(0,K)
+
+set.seed(3)
+for (i in 1:K) {
+  U <- runif(m)
+  T1 <- exp(U) #simple MC
+  T2 <- (exp(U) + exp(1-U))/2
+  est1[i] <- mean(T1)
+  est2[i] <- mean(T2)
+}
+var(est1)
+var(est2)
+1-var(est2)/var(est1)
+```
+方差减小比例的模拟结果为97.8%, 与Ex 5.6中理论计算结果96.8%相接近. 
+

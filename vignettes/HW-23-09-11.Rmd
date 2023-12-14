@@ -1,0 +1,131 @@
+---
+title: "HW-23-09-11"
+author: "SA23204193"
+date: "2023-09-16"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{HW-23-09-11}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question
+
+Use knitr to produce at least 3 examples. For each example, texts should mix with figures and/or tables. Better to have mathematical formulas. 
+
+## Answer
+
+```{r}
+library("knitr")
+library("kableExtra")
+library("ggplot2")
+library("rmarkdown") 
+library("dplyr")
+
+```
+
+### Example 1
+ggplot2的数据集mpg, 记录了汽车相关信息，下面在散点图中展示hwy与displ指标的关系。
+```{r}
+library(ggplot2)
+head(mpg, 6)
+ggplot(data = mpg, aes(x = displ, y = hwy)) + geom_point()
+```
+
+### Example 2
+
+AIC, BIC信息准则: \begin{align*}
+& A I C_1 (k)=V\left (k, \widehat{F}^k\right)+k \hat{\sigma}^2\left (\frac{2}{T}\right); \\
+& B I C_1 (k)=V\left (k, \widehat{F}^k\right)+k \hat{\sigma}^2\left (\frac{\ln T}{T}\right), 
+\end{align*}
+
+可用来评估统计模型的复杂度和衡量统计模型"拟合"资料之优良性. 
+
+\begin{table}[!htbp]
+  \caption{因子个数估计结果} %表格的标题
+	\label{tab:da1}
+	\centering
+	\begin{tabular}{rcc} %可以设置表格每列的对齐方式,c表示居中,r表示右对齐,l表示左对齐
+		  \toprule %加条线
+			 采用方法  & AIC & BIC $\\
+		\midrule %加条线
+		   估计结果   &  2   &   1 \\
+		\bottomrule %加条线
+	\end{tabular}
+\end{table}
+
+```{=tex}
+\begin{table}[!htbp]
+  \caption{挪威纸张数据集的因子个数估计结果} %表格的标题
+    \label{tab:da1}
+    \centering
+    \begin{tabular}{rcccccccc} %可以设置表格每列的对齐方式,c表示居中,r表示右对齐,l表示左对齐
+          \toprule %加条线
+             采用方法  & ER & PC & IC & AIC & BIC & $\text{PC}_{\text{prop} }$ & $\text{IC}_{\text{prop}}$\\
+        \midrule %加条线
+           估计结果   & 3 & 3 & 3 &   3  &  3   &   2   &   1 \\
+            
+            
+        \bottomrule %加条线
+    \end{tabular}
+\end{table}
+```
+### Example 3
+
+生成随机点：
+
+```{r}
+    n = 50
+    set.seed(0)
+    x = runif(n, min=-2, max=2)
+    y = x^3 + rnorm(n)
+```
+
+$$y=x^3+e$$
+以$x$作为横轴, $y$作为纵轴作折线图、散点图。
+
+```{r}
+x_t <- x
+y_t <- y
+for (i1 in 2:n) {
+  for (j1 in n : i1) {
+    if(x_t[j1] < x_t[j1-1]) {
+      tempx <- x_t[j1]  
+      tempy <- y_t[j1]
+      x_t[j1] <- x_t[j1-1]  
+      y_t[j1] <- y_t[j1-1]
+      x_t[j1-1] <- tempx  
+      y_t[j1-1] <- tempy
+    }
+  }
+}
+#冒泡排序
+plot(x_t, y_t, type = 'l', xlab = expression(x), ylab = expression(y))
+plot(x, y, type = 'p', cex=2, col = 'red')
+title(main = expression(y==x^3))
+
+
+```
+
+
+```{=tex}
+\begin{tabular}{cc}%一个c表示有一列, 格式为居中显示(center)
+(1,1)&(1,2)\\%第一行第一列和第二列  中间用&连接
+(2,1)&(2,2)\\%第二行第一列和第二列  中间用&连接
+\end{tabular}
+```
+```{=tex}
+\begin{tabular}{|c|c|}% 通过添加 来表示是否需要绘制竖线
+\hline  % 在表格最上方绘制横线
+(1,1)&(1,2)\\
+\hline  %在第一行和第二行之间绘制横线
+(2,1)&(2,2)\\
+\hline % 在表格最下方绘制横线
+\end{tabular}
+```
+

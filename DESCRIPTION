@@ -1,0 +1,19 @@
+Package: SA23204193
+Type: Package
+Title: HIVE procedure for estimating number of factors in factor models
+Version: 1.0
+Date: 2023-12-11
+Author: Jiyi Xu
+Maintainer: Jiyi Xu <xujiyi@mail.ustc.edu.cn>
+Description: This package is for HIVE procedure for estimating number of factors in factor models.
+License: GPL (>= 2)
+Imports: LambertW, MASS, boot, data.table, dplyr, expm, ggplot2, glmnet,
+    kableExtra, latex2exp, matrixcalc, microbenchmark,
+    modelr, knitr, plyr, bootstrap
+LinkingTo: Rcpp
+RoxygenNote: 7.2.3
+Encoding: UTF-8
+Suggests: rmarkdown
+VignetteBuilder: knitr
+URL: http://github.com/shijima160106/StatComp
+BugReports: http://github.com/shijima160106/StatComp/issues

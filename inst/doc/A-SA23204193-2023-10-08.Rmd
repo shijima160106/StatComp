@@ -1,0 +1,256 @@
+---
+title: "HW-23-10-08"
+author: "SA23204193"
+date: "2023-10-15"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{HW-23-10-08}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question
+
+### Ex 1
+
+V ar(θˆM) = Mk 1 Pk i=1 σi2 +V ar(θI) = V ar(θˆS)+V ar(θI), where θi = E[g(U) | I = i], σi2 = V ar[g(U) | I = i]
+and I takes uniform distribution over {1, . . . , k}.
+Proof that if g is a continuous function over (a, b), then V ar(θˆS)/V ar(θˆM) → 0 as bi − ai → 0 for all
+i = 1, . . . , k.
+
+### Ex 5.13 
+
+Find two importance functions f1 and f2 that are supported on (1, ∞) and
+are ‘close’ to
+g(x) = √x22π e−x2/2, x > 1.
+Which of your two importance functions should produce the smaller variance
+in estimating
+1∞ √x22π e−x2/2 dx
+by importance sampling? Explain.
+
+### Ex 5.14
+
+Obtain a Monte Carlo estimate of
+1∞ √x22π e−x2/2 dx
+by importance sampling.
+
+### Ex 5.15
+
+Obtain the stratified importance sampling estimate in Example 5.13 and compare it with the result of Example 5.10.
+
+### Ex 6.5
+
+Suppose a 95% symmetric t-interval is applied to estimate a mean, but the
+sample data are non-normal. Then the probability that the confidence interval
+covers the mean is not necessarily equal to 0.95. Use a Monte Carlo experiment
+to estimate the coverage probability of the t-interval for random samples of
+χ2(2) data with sample size n = 20. Compare your t-interval results with the
+simulation results in Example 6.4. (The t-interval should be more robust to
+departures from normality than the interval for variance.)
+
+### Ex 6.A
+
+Use Monte Carlo simulation to investigate whether the empirical Type I error rate of the t-test is approximately equal to the nominal significance level
+α, when the sampled population is non-normal. The t-test is robust to mild
+departures from normality. Discuss the simulation results for the cases where
+the sampled population is (i) χ2(1), (ii) Uniform(0,2), and (iii) Exponential(rate=1). In each case, test H0 : µ = µ0 vs H0 : µ = µ0, where µ0 is the
+mean of χ2(1), Uniform(0,2), and Exponential(1), respectively.
+
+## Answer
+
+### Ex 1
+
+$$Var(\hat\theta^S)/Var(\hat\theta^M) = \frac{ \sum_{i=1}^kVar(g(U)|I=i)/Mk }{ \sum_{i=1}^kVar(g(U)|I=i)/Mk + \sum_{i=1}^kVar [E(g(U)|I=i)] /M }$$
+since $k\to +\infty$ when $b_i-a_i\to 0$, $\sum_{i=1}^kVar(g(U)|I=i)/Mk \to 0$, while$\sum_{i=1}^kVar [E(g(U)|I=i)] /M = O(1)$, thus $Var(\hat\theta^S)/Var(\hat\theta^M) \to 0$ as $k \to +\infty$.
+
+```{r}
+library("knitr")
+library("kableExtra")
+library("ggplot2")
+library("rmarkdown") 
+library("dplyr")
+
+```
+
+### Ex 5.13
+
+取$f_1(x)=e^{-(x-1)},x\ge 1$, 
+$$\int_{1}^{+\infty}\frac{g(x)}{f_1(x)}f_1(x)dx = \int_{1}^{+\infty}\frac{x^2}{\sqrt{2\pi e}} e^{-\frac{(x-1)^2}{2}}e^{-(x-1)}dx$$
+令$Z_i \sim Exp(1)$, 则$X_i = Z_i +1$的pdf为 $f_1(x)=e^{-(x-1)}, x \ge 1$
+$$\theta = \int_{1}^{+\infty}\frac{g(x)}{f_1(x)}f_1(x)dx = E\frac{X_1^2}{\sqrt{2\pi e}} e^{-\frac{(X_1-1)^2}{2}}$$
+$$\hat\theta = \frac{1}{m}\sum_{i=1}^{m}\frac{X_i^2}{\sqrt{2\pi e}} e^{-\frac{(X_i-1)^2}{2}}$$
+$$Var \hat\theta = \frac{1}{m}\frac{1}{2\pi e} Var [X_1^2 e^{-\frac{(X_1-1)^2}{2}}] = \frac{0.0248}{m}$$
+
+令$f_2(x)=\frac{1}{\sqrt{2\pi}}e^{-(x-1)^2}, -\infty \le x \le +\infty$,
+
+$$\int_{1}^{+\infty}\frac{g(x)}{f_2(x)}f_2(x)dx = \int_{1}^{+\infty}x^2 f_2(x)dx = \int_{-\infty}^{+\infty}h(x) f_2(x)dx ,$$
+其中$h(x)=x^2I(x>1)$.
+令$W_i \sim N(1)$, 则$Y_i = W_i +1$的pdf为 $f_2(x)=\frac{1}{\sqrt{2\pi}}e^{-(x-1)^2}, -\infty\le x \le +\infty$
+$$\theta = \int_{1}^{+\infty}\frac{g(x)}{f_2(x)}f_2(x)dx = \mathrm Eh(Y_1)$$
+$$\hat\theta = \frac{1}{m}\sum_{i=1}^{m}h(Y_i)$$
+$$Var \hat\theta = \frac{1}{m} Var [h(Y_1)] = \frac{1.2833}{m}$$
+故前者方差更小. 
+
+### Ex 5.14
+由Ex 5.13, 采用方差较小的importance function $f_1(x)=e^{-(x-1)},x\ge 1$
+
+```{r}
+
+set.seed(10) 
+x <- rexp(10000) + 1
+
+m <- 10000
+
+u <- numeric(m)
+u <- x^2 * exp(-(x-1)^2/2) / sqrt(2*pi*exp(1))
+
+mean(u)
+```
+估计结果为0.401988. 
+
+### Ex 5.15
+
+```{r}
+m <- 10000 #number of replicates
+k <- 5
+
+theta.hat <- numeric(k)
+
+for (i in 1:k) {
+  g <- function(x) {
+    exp(-x - log(1+x^2)) * (x > (i-1)/k) * (x < i/k)
+  }
+  
+  u <- runif(m) #f3, inverse transform method
+  x <- - log(1 - u * (1 - exp(-1)))
+  fg <- g(x) / (exp(-x) / (1 - exp(-1)))
+  theta.hat[i] <- mean(fg)
+}
+
+mean(theta.hat)
+
+```
+
+### Ex 6.5
+
+$n=20$, 参数$\mu=2$, $X_i\sim \chi^2(\mu)$, $i=1,...,n$
+总体均值为$EX=\mu$, 估计量$\hat\mu=\bar X$, 
+$Var\hat\mu=\frac{1}{n}VarX_1=\frac{4}{n}$
+
+```{r}
+n <- 20
+alpha <- 0.05
+mu <- 2
+set.seed(65)
+
+se_mu <- sqrt(2*mu/n)
+
+m <- 1e5
+
+beta.hat <- numeric(m)
+beta.se <- numeric(m)
+count=0
+
+for(i in 1:m){
+  x <- rchisq(n, mu)
+  muhat <- mean(x)
+  
+  if( mu>=muhat+qt(alpha/2, n-1) * se_mu && mu<=muhat+qt(1-alpha/2, n-1) * se_mu ) count=count+1
+}
+count/m
+```
+结果相较$1-\alpha = 0.95$略大. 
+
+### Ex 6.A
+
+(i)
+$\chi^2(1)$
+$n=20$, 参数$\mu=1$, $X_i\sim \chi^2(\mu)$, $i=1,...,n$
+总体均值为$EX=\mu$, 估计量$\hat\mu=\bar X$, 
+$Var\hat\mu=\frac{1}{n}VarX_1=\frac{4}{n}$
+
+```{r}
+n <- 20
+alpha <- 0.05
+mu <- 1
+set.seed(61)
+
+se_mu <- sqrt(2*mu/n)
+
+m <- 1e5
+
+beta.hat <- numeric(m)
+beta.se <- numeric(m)
+count=0
+
+for(i in 1:m){
+  x <- rchisq(n, mu)
+  muhat <- mean(x)
+  
+  if( mu>=muhat+qt(alpha/2, n-1) * se_mu && mu<=muhat+qt(1-alpha/2, n-1) * se_mu ) count=count+1
+}
+1-count/m
+```
+
+(ii)
+Uniform(0,2)
+即$X_i \sim \mathrm{U}(\mu-1, \mu+1), $i=1,...,n$, $n=20$, 参数$\mu=1$,  
+总体均值为$EX=\mu$, 估计量$\hat\mu=\bar X$, 
+$Var\hat\mu=\frac{1}{n}VarX_1=\frac{1}{3n}$
+```{r}
+n <- 20
+alpha <- 0.05
+mu <- 1
+set.seed(62)
+
+se_mu <- sqrt(1/3/n)
+
+m <- 1e5
+
+beta.hat <- numeric(m)
+beta.se <- numeric(m)
+count=0
+
+for(i in 1:m){
+  x <- runif(n, mu-1, mu+1)
+  muhat <- mean(x)
+  
+  if( mu>=muhat+qt(alpha/2, n-1) * se_mu && mu<=muhat+qt(1-alpha/2, n-1) * se_mu ) count=count+1
+}
+1-count/m
+```
+
+(iii)
+$\mathrm{Exp}(1)$
+
+$n=20$, 参数$\mu=1$, $X_i\sim \mathrm{Exp}(\frac{1}{\mu})$, $i=1,...,n$
+总体均值为$EX=\mu$, 估计量$\hat\mu=\bar X$, 
+$Var\hat\mu=\frac{1}{n}VarX_1=\frac{1}{n}$
+```{r}
+n <- 20
+alpha <- 0.05
+mu <- 1
+set.seed(63)
+
+se_mu <- sqrt(1/n)
+
+m <- 1e5
+
+beta.hat <- numeric(m)
+beta.se <- numeric(m)
+count=0
+
+for(i in 1:m){
+  x <- rexp(n, 1/mu)
+  muhat <- mean(x)
+  
+  if( mu>=muhat+qt(alpha/2, n-1) * se_mu && mu<=muhat+qt(1-alpha/2, n-1) * se_mu ) count=count+1
+}
+1-count/m
+```
+三者第一类错误率均比$\alpha=0.05$略小. 
